@@ -1,0 +1,59 @@
+Parameters:
+    EnviromentName:
+        Description: An environment name that will be prefixed to resource names
+        Type: String
+    Stackname:
+        Description: Stack name to be appended to nested security group stack
+        Type: String
+    LoadBalancerSubnets:
+        Type: String
+        Description: Subnets for LoadBalancer
+    LoadBalancerSecurityGroup:
+        Description: Security group for internet facing alb
+        Type: AWS::EC2::SecurityGroup::Id
+    VPC:
+        Description: Choose which VPC the security groups should be deployed to
+        Type: AWS::EC2::VPC::Id
+
+Resources:
+    LoadBalancer:
+        Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+        Properties:
+            Name: !Join ['-',[!Ref Stackname,'alb',!Ref EnviromentName]]
+            Subnets: !Split [",",!Ref LoadBalancerSubnets]
+            SecurityGroups:
+                - !Ref LoadBalancerSecurityGroup
+
+
+    LoadBalancerListener:
+        Type: AWS::ElasticLoadBalancingV2::Listener
+        Properties:
+            LoadBalancerArn: !Ref LoadBalancer
+            Port: 80
+            Protocol: HTTP
+            DefaultActions:
+                - Type: fixed-response
+                  FixedResponseConfig:
+                    ContentType: text/plain
+                    MessageBody: No Route Detected
+                    StatusCode: 404
+                
+    DefaultTargetGroup:
+        Type: AWS::ElasticLoadBalancingV2::TargetGroup
+        Properties:
+            Name: !Join ['-',[!Ref Stackname,'default','tg',!Ref EnviromentName]]
+            Protocol: HTTP
+            VpcId: !Ref VPC
+            Port: 80
+
+
+
+Outputs:
+    LoadBalancerDns:
+        Description: DNS name of loadbalancer
+        Value: !GetAtt LoadBalancer.DNSName
+    LoadBalancerListener:
+        Description: Listener of alb
+        Value: !Ref LoadBalancerListener
+    
+    

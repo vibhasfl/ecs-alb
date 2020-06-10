@@ -1,0 +1,79 @@
+Parameters:
+    LoadBalancerSubnets:
+        Type: String
+        Description: Subnets for ASG
+    EnviromentName:
+        Description: An environment name that will be prefixed to resource names
+        Type: String
+    Stackname:
+        Description: Stack name to be appended to nested security group stack
+        Type: String
+    EC2ClusterSecurityGroup:
+        Description: Ecs Sg for ASGLC
+        Type: AWS::EC2::SecurityGroup::Id
+    SshSecurityGroup:
+        Description: SSH Sg for ASGLC
+        Type: AWS::EC2::SecurityGroup::Id
+    Ec2InstanceType:
+        Description: Instance Type of ecs ec2 cluster
+        Type: String
+        AllowedValues: [ t2.micro, t2.small, t2.medium, t2.large, t2.xlarge, t2.2xlarge,
+     m5.large, m5.xlarge, m5.2large, m5.4xlarge, m5.12xlarge, m5.24large,
+     c5.large, c5.xlarge, c5.2xlarge, c5.4xlarge, c5.9xlarge, c5.18xlarge,
+     r5.large, r5.xlarge, r5.2xlarge, r5.4xlarge, r5.12xlarge, r5.24xlarge ]
+        
+  
+
+
+Resources:
+    Cluster:
+        Type: AWS::ECS::Cluster
+        Properties:
+            ClusterName: !Join ['-',[!Ref Stackname,'cluster',!Ref EnviromentName]]
+
+    AutoScalingGroup:
+        Type: AWS::AutoScaling::AutoScalingGroup
+        Properties:
+            AutoScalingGroupName: !Join ['-',[!Ref Stackname,'asg',!Ref EnviromentName]]
+            VPCZoneIdentifier: !Split [",",!Ref LoadBalancerSubnets]
+            LaunchConfigurationName: !Ref AutoScalingGroupLaunchConfiguration
+            MaxSize: 2
+            MinSize: 1
+            DesiredCapacity: 1
+            Tags:
+                - Key: Name
+                  Value: !Join ['-',[!Ref Stackname,'asg',!Ref EnviromentName]]
+                  PropagateAtLaunch: true
+        
+
+# Note Can create role similar to ecsInstanceRole
+
+    AutoScalingGroupLaunchConfiguration:
+        Type: AWS::AutoScaling::LaunchConfiguration
+        Properties:
+            KeyName: ecs-poc
+            ImageId: ami-07a63940735aebd38
+            InstanceType: !Ref Ec2InstanceType
+            IamInstanceProfile: ecsInstanceRole
+            SecurityGroups:
+                - !Ref EC2ClusterSecurityGroup
+                - !Ref SshSecurityGroup
+            UserData:
+                Fn::Base64:
+                    Fn::Sub:
+                        - |
+                           #!/bin/bash -xe
+                           echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
+                           yum install -y aws-cfn-bootstrap
+                        - { ECSCluster: !Ref Cluster }
+
+Outputs:
+    Cluster:
+        Description: Name of cluster
+        Value: !Ref Cluster
+    ECSAutoScalingGroupName:
+        Description: A reference to ECS AutoScaling Group Name
+        Value: !Ref AutoScalingGroup
+
+
+
