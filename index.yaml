@@ -25,6 +25,13 @@ Parameters:
         Description: The path to register with the Application Load Balancer
         Type: String
         Default: /dept
+    Ec2AmiId:
+        Description: AMI Id for EC2 Instance (Use amazon ECS optimized AMI only)
+        Type: AWS::EC2::Image::Id
+        Default: ami-0b22c910bce7178b6
+    KeyPair:
+        Description: KeyPair name to SSH into Instance
+        Type: AWS::EC2::KeyPair::KeyName
 
 
 Resources:
@@ -63,6 +70,8 @@ Resources:
                 EC2ClusterSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.EC2ClusterSecurityGroup
                 SshSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.SshSecurityGroup
                 Ec2InstanceType: !Ref Ec2InstanceType
+                Ec2AmiId: !Ref Ec2AmiId
+                KeyPair: !Ref KeyPair
             TimeoutInMinutes: 5
 
     LogGroupStack:

@@ -21,6 +21,13 @@ Parameters:
      m5.large, m5.xlarge, m5.2large, m5.4xlarge, m5.12xlarge, m5.24large,
      c5.large, c5.xlarge, c5.2xlarge, c5.4xlarge, c5.9xlarge, c5.18xlarge,
      r5.large, r5.xlarge, r5.2xlarge, r5.4xlarge, r5.12xlarge, r5.24xlarge ]
+    Ec2AmiId:
+        Description: AMI Id for EC2 Instance (Use amazon ECS optimized AMI only)
+        Type: AWS::EC2::Image::Id
+        Default: ami-0b22c910bce7178b6
+    KeyPair:
+        Description: KeyPair name to SSH into Instance
+        Type: AWS::EC2::KeyPair::KeyName
         
   
 
@@ -51,8 +58,8 @@ Resources:
     AutoScalingGroupLaunchConfiguration:
         Type: AWS::AutoScaling::LaunchConfiguration
         Properties:
-            KeyName: ecs-poc
-            ImageId: ami-07a63940735aebd38
+            KeyName: !Ref KeyPair
+            ImageId: !Ref Ec2AmiId
             InstanceType: !Ref Ec2InstanceType
             IamInstanceProfile: ecsInstanceRole
             SecurityGroups:
@@ -62,9 +69,8 @@ Resources:
                 Fn::Base64:
                     Fn::Sub:
                         - |
-                           #!/bin/bash -xe
+                           #!/bin/bash
                            echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
-                           yum install -y aws-cfn-bootstrap
                         - { ECSCluster: !Ref Cluster }
 
 Outputs:
