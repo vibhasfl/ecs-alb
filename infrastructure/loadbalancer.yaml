@@ -14,6 +14,9 @@ Parameters:
     VPC:
         Description: Choose which VPC the security groups should be deployed to
         Type: AWS::EC2::VPC::Id
+    CertificateId:
+        Description: Certificate Arn
+        Type: String
 
 Resources:
     LoadBalancer:
@@ -31,6 +34,21 @@ Resources:
             LoadBalancerArn: !Ref LoadBalancer
             Port: 80
             Protocol: HTTP
+            DefaultActions:
+                - Type: fixed-response
+                  FixedResponseConfig:
+                    ContentType: text/plain
+                    MessageBody: No Route Detected
+                    StatusCode: 404
+
+    LoadBalancerHttpsListener:
+        Type: AWS::ElasticLoadBalancingV2::Listener
+        Properties:
+            LoadBalancerArn: !Ref LoadBalancer
+            Certificates:
+                - CertificateArn: !Ref CertificateId
+            Port: 443
+            Protocol: HTTPS
             DefaultActions:
                 - Type: fixed-response
                   FixedResponseConfig:
@@ -55,5 +73,8 @@ Outputs:
     LoadBalancerListener:
         Description: Listener of alb
         Value: !Ref LoadBalancerListener
+    LoadBalancerHttpsListener:
+        Description: Https Listner of alb
+        Value: !Ref LoadBalancerHttpsListener
     
     

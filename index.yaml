@@ -32,6 +32,9 @@ Parameters:
     KeyPair:
         Description: KeyPair name to SSH into Instance
         Type: AWS::EC2::KeyPair::KeyName
+    CertificateId:
+        Description: Certificate Arn
+        Type: String
 
 
 Resources:
@@ -56,6 +59,7 @@ Resources:
                 LoadBalancerSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.LoadBalancerSecurityGroup
                 LoadBalancerSubnets: !Join [",",!Ref Subnets]
                 VPC: !Ref VPC
+                CertificateId: !Ref CertificateId
             TimeoutInMinutes: 5
                 
 
@@ -95,6 +99,7 @@ Resources:
                 Path: !Ref UserServicePath
                 LoadBalancerListener: !GetAtt LoadBalancerStack.Outputs.LoadBalancerListener
                 LogGroupName: !GetAtt LogGroupStack.Outputs.LogGroupName
+                LoadBalancerHttpsListener: !GetAtt LoadBalancerStack.Outputs.LoadBalancerHttpsListener
             TimeoutInMinutes: 5
 
     DeptService:
@@ -109,6 +114,7 @@ Resources:
                 Path: !Ref DeptServicePath
                 LoadBalancerListener: !GetAtt LoadBalancerStack.Outputs.LoadBalancerListener
                 LogGroupName: !GetAtt LogGroupStack.Outputs.LogGroupName
+                LoadBalancerHttpsListener: !GetAtt LoadBalancerStack.Outputs.LoadBalancerHttpsListener
             TimeoutInMinutes: 5
 
 

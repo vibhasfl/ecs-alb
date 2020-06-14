@@ -21,6 +21,9 @@ Parameters:
     LogGroupName:
         Description: Log group name
         Type: String
+    LoadBalancerHttpsListener:
+        Description: The Https Application Load Balancer listener to register with
+        Type: String
 
 
 
@@ -65,6 +68,20 @@ Resources:
             Actions:
                 - TargetGroupArn: !Ref TargetGroup
                   Type: forward
+
+    ListenerHttpsRule:
+        Type: AWS::ElasticLoadBalancingV2::ListenerRule
+        Properties:
+            ListenerArn: !Ref LoadBalancerHttpsListener
+            Priority: 4
+            Conditions:
+                - Field: path-pattern
+                  Values:
+                    - !Ref Path
+            Actions:
+                - TargetGroupArn: !Ref TargetGroup
+                  Type: forward
+                  
 
     TaskDefination:
         Type: AWS::ECS::TaskDefinition
