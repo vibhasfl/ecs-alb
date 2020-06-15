@@ -38,7 +38,7 @@ Resources:
     SecurityGroupsStack:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://aws-practice-001.s3.amazonaws.com/securitygroups.yaml
+            TemplateURL: https://aws-practice-001.s3.amazonaws.com/public-vpc/securitygroups.yaml
             Parameters:
                 EnviromentName: !Ref EnviromentName
                 VPC: !Ref VPC
@@ -49,7 +49,7 @@ Resources:
     LoadBalancerStack:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://aws-practice-001.s3.amazonaws.com/loadbalancer.yaml
+            TemplateURL: https://aws-practice-001.s3.amazonaws.com/public-vpc/loadbalancer.yaml
             Parameters:
                 EnviromentName: !Ref EnviromentName
                 Stackname: !Sub ${AWS::StackName}
@@ -62,7 +62,7 @@ Resources:
     EcsClusterStack:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://aws-practice-001.s3.amazonaws.com/ecs-cluster.yaml
+            TemplateURL: https://aws-practice-001.s3.amazonaws.com/public-vpc/ecs-cluster.yaml
             Parameters:
                 EnviromentName: !Ref EnviromentName
                 Stackname: !Sub ${AWS::StackName}
@@ -77,7 +77,7 @@ Resources:
     LogGroupStack:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://aws-practice-001.s3.amazonaws.com/logs.yaml
+            TemplateURL: https://aws-practice-001.s3.amazonaws.com/public-vpc/logs.yaml
             Parameters:
                 EnviromentName: !Ref EnviromentName
                 Stackname: !Sub ${AWS::StackName}
@@ -86,7 +86,7 @@ Resources:
     UserService:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://aws-practice-001.s3.amazonaws.com/users-service.yaml
+            TemplateURL: https://aws-practice-001.s3.amazonaws.com/public-vpc/users-service.yaml
             Parameters:
                 EnviromentName: !Ref EnviromentName
                 Stackname: !Sub ${AWS::StackName}
@@ -100,7 +100,7 @@ Resources:
     DeptService:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://aws-practice-001.s3.amazonaws.com/dept-service.yaml
+            TemplateURL: https://aws-practice-001.s3.amazonaws.com/public-vpc/dept-service.yaml
             Parameters:
                 EnviromentName: !Ref EnviromentName
                 Stackname: !Sub ${AWS::StackName}
