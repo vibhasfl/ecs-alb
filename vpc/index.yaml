@@ -192,4 +192,13 @@ Resources:
             SubnetId: !Ref PrivateSubnet1B
             RouteTableId: !Ref PrivateRouteTable
 
+# Connect Public subnet to IGW by updating its route i.e Any Ip hit from this network which is not local talk to IGW
+
+    PublicRoute:
+        Type: AWS::EC2::Route
+        DependsOn: InternetGatewayAttachment
+        Properties:
+            RouteTableId: !Ref PublicRouteTable
+            DestinationCidrBlock: 0.0.0.0/0
+            GatewayId: !Ref InternetGateway
     
