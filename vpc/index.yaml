@@ -165,5 +165,31 @@ Resources:
                   Value: Private
                 - Key: Name
                   Value: !Join [-, [!Ref 'VpcName','private']]  
+ 
+# Associate Subnets with route table
+
+    PublicSubnet1aAssociation:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId: !Ref PublicSubnet1A
+            RouteTableId: !Ref PublicRouteTable
+
+    PublicSubnet1bAssociation:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId: !Ref PublicSubnet1B
+            RouteTableId: !Ref PublicRouteTable
+
+    PrivateSubnet1aAssociation:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId: !Ref PrivateSubnet1A
+            RouteTableId: !Ref PrivateRouteTable
+
+    PrivateSubnet1bAssociation:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId: !Ref PrivateSubnet1B
+            RouteTableId: !Ref PrivateRouteTable
 
     
