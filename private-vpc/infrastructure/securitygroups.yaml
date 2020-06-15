@@ -1,0 +1,93 @@
+Parameters:
+    EnviromentName:
+        Description: An environment name that will be prefixed to resource names
+        Type: String
+    VPC:
+        Description: Choose which VPC the security groups should be deployed to
+        Type: AWS::EC2::VPC::Id
+    Stackname:
+        Description: Stack name to be appended to nested security group stack
+        Type: String
+        
+
+Resources:
+
+    SshSecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupName: !Join ['-',[!Ref Stackname,'ssh']]
+            VpcId: !Ref VPC
+            GroupDescription: Enable SSH access via port 22
+            SecurityGroupIngress: 
+                - IpProtocol: tcp
+                  FromPort: 22
+                  ToPort: 22
+                  CidrIp: 0.0.0.0/0
+            Tags:
+                - Key: Name
+                  Value: !Join ['-',[!Ref Stackname,'ssh',!Ref EnviromentName]]
+
+                
+
+    HttpSecurityGroup:
+        Type: AWS::EC2::SecurityGroup 
+        Properties:
+            GroupName: !Join ['-',[!Ref Stackname,'http']]
+            VpcId: !Ref VPC
+            GroupDescription: Enable HTTP access via port 80
+            SecurityGroupIngress: 
+                - IpProtocol: tcp
+                  FromPort: 80
+                  ToPort: 80
+                  CidrIp: 0.0.0.0/0
+            Tags:
+                - Key: Name
+                  Value: !Join ['-',[!Ref Stackname,'http',!Ref EnviromentName]]
+
+
+    LoadBalancerSecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupName: !Join ['-',[!Ref Stackname,'alb']]
+            GroupDescription: Access to the public facing load balancer
+            VpcId: !Ref VPC
+            SecurityGroupIngress:
+                - CidrIp: 0.0.0.0/0
+                  IpProtocol: -1
+            Tags:
+                - Key: Name
+                  Value: !Join ['-',[!Ref Stackname,'alb',!Ref EnviromentName]]
+
+    EC2ClusterSecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupName: !Join ['-',[!Ref Stackname,'ecs']]
+            GroupDescription: Access to the ecs cluster behind load balancer
+            VpcId: !Ref VPC
+            SecurityGroupIngress: 
+                - IpProtocol: tcp
+                  FromPort: 0
+                  ToPort: 65535
+                  SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup 
+            Tags:
+                - Key: Name
+                  Value: !Join ['-',[!Ref Stackname,'cluster',!Ref EnviromentName]]
+                  
+
+Outputs:
+    SshSecurityGroup:
+        Description: A reference to security group for SSH
+        Value: !Ref SshSecurityGroup
+    HttpSecurityGroup:
+        Description: A reference to security group for HTTP
+        Value: !Ref HttpSecurityGroup
+    LoadBalancerSecurityGroup:
+        Description: A reference to security group for public facing ALB
+        Value: !Ref LoadBalancerSecurityGroup
+    EC2ClusterSecurityGroup:
+        Description: A reference to security group for ECS cluster from ALB
+        Value: !Ref EC2ClusterSecurityGroup
+
+
+
+

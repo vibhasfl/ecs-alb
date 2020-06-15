@@ -1,0 +1,121 @@
+Parameters:
+    EnviromentName:
+        Description: An environment name that will be prefixed to resource names
+        Type: String
+        AllowedValues: [poc, dev, uat]
+        Default: poc
+    VPC:
+        Description: Choose which VPC the security groups should be deployed to
+        Type: AWS::EC2::VPC::Id
+    Subnets:
+        Description: Subnets for LoadBalancer
+        Type: List<AWS::EC2::Subnet::Id>
+    Ec2InstanceType:
+        Description: Instance Type of ecs ec2 cluster
+        Type: String
+        AllowedValues: [ t2.micro, t2.small, t2.medium, t2.large, t2.xlarge, t2.2xlarge,
+     m5.large, m5.xlarge, m5.2large, m5.4xlarge, m5.12xlarge, m5.24large,
+     c5.large, c5.xlarge, c5.2xlarge, c5.4xlarge, c5.9xlarge, c5.18xlarge,
+     r5.large, r5.xlarge, r5.2xlarge, r5.4xlarge, r5.12xlarge, r5.24xlarge ]
+    UserServicePath:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+        Default: /users
+    DeptServicePath:
+        Description: The path to register with the Application Load Balancer
+        Type: String
+        Default: /dept
+    Ec2AmiId:
+        Description: AMI Id for EC2 Instance (Use amazon ECS optimized AMI only)
+        Type: AWS::EC2::Image::Id
+        Default: ami-0b22c910bce7178b6
+    KeyPair:
+        Description: KeyPair name to SSH into Instance
+        Type: AWS::EC2::KeyPair::KeyName
+    PrivateSubnets:
+        Description: Subnets for EC2 Instances
+        Type: List<AWS::EC2::Subnet::Id>
+
+
+Resources:
+    SecurityGroupsStack:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: https://aws-practice-001.s3.amazonaws.com/private-vpc/securitygroups.yaml
+            Parameters:
+                EnviromentName: !Ref EnviromentName
+                VPC: !Ref VPC
+                Stackname: !Sub ${AWS::StackName}
+            TimeoutInMinutes: 5
+                
+
+    LoadBalancerStack:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: https://aws-practice-001.s3.amazonaws.com/private-vpc/loadbalancer.yaml
+            Parameters:
+                EnviromentName: !Ref EnviromentName
+                Stackname: !Sub ${AWS::StackName}
+                LoadBalancerSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.LoadBalancerSecurityGroup
+                LoadBalancerSubnets: !Join [",",!Ref Subnets]
+                VPC: !Ref VPC
+            TimeoutInMinutes: 5
+                
+
+    EcsClusterStack:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: https://aws-practice-001.s3.amazonaws.com/private-vpc/ecs-cluster.yaml
+            Parameters:
+                EnviromentName: !Ref EnviromentName
+                Stackname: !Sub ${AWS::StackName}
+                PrivateSubnets: !Join [",",!Ref PrivateSubnets]
+                EC2ClusterSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.EC2ClusterSecurityGroup
+                SshSecurityGroup: !GetAtt SecurityGroupsStack.Outputs.SshSecurityGroup
+                Ec2InstanceType: !Ref Ec2InstanceType
+                Ec2AmiId: !Ref Ec2AmiId
+                KeyPair: !Ref KeyPair
+            TimeoutInMinutes: 5
+
+    LogGroupStack:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: https://aws-practice-001.s3.amazonaws.com/private-vpc/logs.yaml
+            Parameters:
+                EnviromentName: !Ref EnviromentName
+                Stackname: !Sub ${AWS::StackName}
+            TimeoutInMinutes: 5
+
+    UserService:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: https://aws-practice-001.s3.amazonaws.com/private-vpc/users-service.yaml
+            Parameters:
+                EnviromentName: !Ref EnviromentName
+                Stackname: !Sub ${AWS::StackName}
+                VPC: !Ref VPC
+                Cluster: !GetAtt EcsClusterStack.Outputs.Cluster
+                Path: !Ref UserServicePath
+                LoadBalancerListener: !GetAtt LoadBalancerStack.Outputs.LoadBalancerListener
+                LogGroupName: !GetAtt LogGroupStack.Outputs.LogGroupName
+            TimeoutInMinutes: 5
+
+    DeptService:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: https://aws-practice-001.s3.amazonaws.com/private-vpc/dept-service.yaml
+            Parameters:
+                EnviromentName: !Ref EnviromentName
+                Stackname: !Sub ${AWS::StackName}
+                VPC: !Ref VPC
+                Cluster: !GetAtt EcsClusterStack.Outputs.Cluster
+                Path: !Ref DeptServicePath
+                LoadBalancerListener: !GetAtt LoadBalancerStack.Outputs.LoadBalancerListener
+                LogGroupName: !GetAtt LogGroupStack.Outputs.LogGroupName
+            TimeoutInMinutes: 5
+
+
+
+
+
+

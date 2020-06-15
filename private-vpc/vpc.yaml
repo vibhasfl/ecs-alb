@@ -1,0 +1,231 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AWS CloudFormation Sample Template to create VPC'
+
+Metadata:
+    'AWS::CloudFormation::Interface':
+        ParameterGroups:
+            - Label:
+                default: "VPC Details"
+              Parameters:
+                - VpcName
+                - VpcCidrBlock
+            - Label:
+                default: "Public subnet"
+              Parameters:
+                - PublicSubnet1ACidrBlock
+                - AvailabilityZonePublic1A
+                - PublicSubnet1BCidrBlock
+                - AvailabilityZonePublic1B
+            - Label:
+                default: "Private subnet"
+              Parameters:
+                - PrivateSubnet1ACidrBlock
+                - AvailabilityZonePrivate1A
+                - PrivateSubnet1BCidrBlock
+                - AvailabilityZonePrivate1B
+            
+                
+        ParameterLabels:
+            VpcName:
+                default: "VPC Name"
+            VpcCidrBlock:
+                default: "VPC CIDR block"
+            PublicSubnet1ACidrBlock:
+                default: "Subnet 1A CIDR"
+            AvailabilityZonePublic1A:
+                default: "Subnet 1A AZ"
+            PublicSubnet1BCidrBlock:
+                default: "Subnet 1B CIDR"
+            AvailabilityZonePublic1B:
+                default: "Subnet 1B AZ"
+            PrivateSubnet1ACidrBlock:
+                default: "Subnet 1A CIDR"
+            AvailabilityZonePrivate1A:
+                default: "Subnet 1A AZ"
+            PrivateSubnet1BCidrBlock:
+                default: "Subnet 1B CIDR"
+            AvailabilityZonePrivate1B:
+                default: "Subnet 1B AZ"
+            IGWName:
+                default: "Name"
+
+
+Parameters:
+    VpcName:
+        Type: String
+    VpcCidrBlock:
+        Type: String
+    PublicSubnet1ACidrBlock:
+        Type: String
+    AvailabilityZonePublic1A:
+        Type: AWS::EC2::AvailabilityZone::Name
+    PublicSubnet1BCidrBlock:
+        Type: String
+    AvailabilityZonePublic1B:
+        Type: AWS::EC2::AvailabilityZone::Name
+    PrivateSubnet1ACidrBlock:
+        Type: String
+    AvailabilityZonePrivate1A:
+        Type: AWS::EC2::AvailabilityZone::Name
+    PrivateSubnet1BCidrBlock:
+        Type: String
+    AvailabilityZonePrivate1B:
+        Type: AWS::EC2::AvailabilityZone::Name
+    
+
+
+Resources:
+    apolloVpc:
+        Type: AWS::EC2::VPC
+        Properties:
+            CidrBlock: !Ref VpcCidrBlock
+            InstanceTenancy: default
+            Tags:
+                - Key: Name
+                  Value: !Join ['-',[!Ref VpcName,'vpc']]
+
+    PublicSubnet1A:        
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId: !Ref apolloVpc
+            CidrBlock: !Ref PublicSubnet1ACidrBlock
+            AvailabilityZone: !Ref AvailabilityZonePublic1A
+            MapPublicIpOnLaunch: true
+            Tags:
+                - Key: Name
+                  Value: !Join ['-',[!Ref VpcName ,'public-1a']]
+
+    PublicSubnet1B:        
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId: !Ref apolloVpc
+            CidrBlock: !Ref PublicSubnet1BCidrBlock
+            AvailabilityZone: !Ref AvailabilityZonePublic1B
+            MapPublicIpOnLaunch: true
+            Tags:
+                - Key: Name
+                  Value: !Join ['-',[!Ref VpcName ,'public-1b']]
+
+
+    PrivateSubnet1A:        
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId: !Ref apolloVpc
+            CidrBlock: !Ref PrivateSubnet1ACidrBlock
+            AvailabilityZone: !Ref AvailabilityZonePrivate1A
+            Tags:
+                - Key: Name
+                  Value: !Join ['-',[!Ref VpcName ,'private-1a']]
+
+    PrivateSubnet1B:        
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId: !Ref apolloVpc
+            CidrBlock: !Ref PrivateSubnet1BCidrBlock
+            AvailabilityZone: !Ref AvailabilityZonePrivate1B
+            Tags:
+                - Key: Name
+                  Value: !Join ['-',[!Ref VpcName ,'private-1b']]
+
+# IGW
+
+    InternetGateway:
+        Type: AWS::EC2::InternetGateway
+        Properties:
+            Tags:
+                - Key: Name
+                  Value: !Join [-, [!Ref 'VpcName','igw']]
+                - Key: Network
+                  Value: Public
+            
+    InternetGatewayAttachment:
+        Type: AWS::EC2::VPCGatewayAttachment
+        Properties:
+            VpcId: !Ref apolloVpc
+            InternetGatewayId: !Ref InternetGateway
+
+# Route Table
+
+    PublicRouteTable:
+        Type: AWS::EC2::RouteTable
+        Properties:
+            VpcId: !Ref apolloVpc
+            Tags:
+                - Key: Network
+                  Value: Public
+                - Key: Name
+                  Value: !Join [-, [!Ref 'VpcName','public']]  
+
+    PrivateRouteTable:
+        Type: AWS::EC2::RouteTable
+        Properties:
+            VpcId: !Ref apolloVpc
+            Tags:
+                - Key: Network
+                  Value: Private
+                - Key: Name
+                  Value: !Join [-, [!Ref 'VpcName','private']]  
+ 
+# Associate Subnets with route table
+
+    PublicSubnet1aAssociation:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId: !Ref PublicSubnet1A
+            RouteTableId: !Ref PublicRouteTable
+
+    PublicSubnet1bAssociation:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId: !Ref PublicSubnet1B
+            RouteTableId: !Ref PublicRouteTable
+
+    PrivateSubnet1aAssociation:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId: !Ref PrivateSubnet1A
+            RouteTableId: !Ref PrivateRouteTable
+
+    PrivateSubnet1bAssociation:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId: !Ref PrivateSubnet1B
+            RouteTableId: !Ref PrivateRouteTable
+
+# Connect Public subnet to IGW by updating its route i.e Any Ip hit from this network which is not local talk to IGW
+
+    PublicRoute:
+        Type: AWS::EC2::Route
+        DependsOn: InternetGatewayAttachment
+        Properties:
+            RouteTableId: !Ref PublicRouteTable
+            DestinationCidrBlock: 0.0.0.0/0
+            GatewayId: !Ref InternetGateway
+
+# to get internet access to instances in private we need Nat instance(outdated) OR Nat gateway(recommended)
+# Note nat instance has to be launced in public subnet 
+# To make it HA we launch in both public subnet but currently I am launching in just one (1A)
+# Note : Without NAT gateway instances in private subnet wouldn't be able to register itself to ecs cluster
+#        Second option is to create VPC endpoint but it would be costly
+
+    NatPublicIP:
+        Type: AWS::EC2::EIP
+        DependsOn: apolloVpc
+
+
+    NatGateway:
+        Type: AWS::EC2::NatGateway
+        DependsOn: NatPublicIP
+        Properties:
+            SubnetId: !Ref PublicSubnet1A
+            AllocationId: !GetAtt NatPublicIP.AllocationId
+
+# Connecting NAT Gateway to private Subnet
+
+    PrivateRoute:
+        Type: AWS::EC2::Route
+        Properties:
+            RouteTableId: !Ref PrivateRouteTable
+            DestinationCidrBlock: 0.0.0.0/0
+            NatGatewayId: !Ref NatGateway
+    
