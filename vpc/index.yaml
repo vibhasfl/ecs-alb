@@ -23,6 +23,8 @@ Metadata:
                 - AvailabilityZonePrivate1A
                 - PrivateSubnet1BCidrBlock
                 - AvailabilityZonePrivate1B
+            
+                
         ParameterLabels:
             VpcName:
                 default: "VPC Name"
@@ -44,6 +46,8 @@ Metadata:
                 default: "Subnet 1B CIDR"
             AvailabilityZonePrivate1B:
                 default: "Subnet 1B AZ"
+            IGWName:
+                default: "Name"
 
 
 Parameters:
@@ -122,5 +126,20 @@ Resources:
             Tags:
                 - Key: Name
                   Value: !Join ['-',[!Ref VpcName ,'private-1b']]
+
+    InternetGateway:
+        Type: AWS::EC2::InternetGateway
+        Properties:
+            Tags:
+                - Key: Name
+                  Value: !Join [-, [!Ref 'VpcName','igw']]
+                - Key: Network
+                  Value: Public
+            
+    InternetGatewayAttachment:
+        Type: AWS::EC2::VPCGatewayAttachment
+        Properties:
+            VpcId: !Ref apolloVpc
+            InternetGatewayId: !Ref InternetGateway
 
     
