@@ -127,6 +127,8 @@ Resources:
                 - Key: Name
                   Value: !Join ['-',[!Ref VpcName ,'private-1b']]
 
+# IGW
+
     InternetGateway:
         Type: AWS::EC2::InternetGateway
         Properties:
@@ -141,5 +143,27 @@ Resources:
         Properties:
             VpcId: !Ref apolloVpc
             InternetGatewayId: !Ref InternetGateway
+
+# Route Table
+
+    PublicRouteTable:
+        Type: AWS::EC2::RouteTable
+        Properties:
+            VpcId: !Ref apolloVpc
+            Tags:
+                - Key: Network
+                  Value: Public
+                - Key: Name
+                  Value: !Join [-, [!Ref 'VpcName','public']]  
+
+    PrivateRouteTable:
+        Type: AWS::EC2::RouteTable
+        Properties:
+            VpcId: !Ref apolloVpc
+            Tags:
+                - Key: Network
+                  Value: Private
+                - Key: Name
+                  Value: !Join [-, [!Ref 'VpcName','private']]  
 
     
