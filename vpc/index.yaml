@@ -1,0 +1,126 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AWS CloudFormation Sample Template to create VPC'
+
+Metadata:
+    'AWS::CloudFormation::Interface':
+        ParameterGroups:
+            - Label:
+                default: "VPC Details"
+              Parameters:
+                - VpcName
+                - VpcCidrBlock
+            - Label:
+                default: "Public subnet"
+              Parameters:
+                - PublicSubnet1ACidrBlock
+                - AvailabilityZonePublic1A
+                - PublicSubnet1BCidrBlock
+                - AvailabilityZonePublic1B
+            - Label:
+                default: "Private subnet"
+              Parameters:
+                - PrivateSubnet1ACidrBlock
+                - AvailabilityZonePrivate1A
+                - PrivateSubnet1BCidrBlock
+                - AvailabilityZonePrivate1B
+        ParameterLabels:
+            VpcName:
+                default: "VPC Name"
+            VpcCidrBlock:
+                default: "VPC CIDR block"
+            PublicSubnet1ACidrBlock:
+                default: "Subnet 1A CIDR"
+            AvailabilityZonePublic1A:
+                default: "Subnet 1A AZ"
+            PublicSubnet1BCidrBlock:
+                default: "Subnet 1B CIDR"
+            AvailabilityZonePublic1B:
+                default: "Subnet 1B AZ"
+            PrivateSubnet1ACidrBlock:
+                default: "Subnet 1A CIDR"
+            AvailabilityZonePrivate1A:
+                default: "Subnet 1A AZ"
+            PrivateSubnet1BCidrBlock:
+                default: "Subnet 1B CIDR"
+            AvailabilityZonePrivate1B:
+                default: "Subnet 1B AZ"
+
+
+Parameters:
+    VpcName:
+        Type: String
+    VpcCidrBlock:
+        Type: String
+    PublicSubnet1ACidrBlock:
+        Type: String
+    AvailabilityZonePublic1A:
+        Type: AWS::EC2::AvailabilityZone::Name
+    PublicSubnet1BCidrBlock:
+        Type: String
+    AvailabilityZonePublic1B:
+        Type: AWS::EC2::AvailabilityZone::Name
+    PrivateSubnet1ACidrBlock:
+        Type: String
+    AvailabilityZonePrivate1A:
+        Type: AWS::EC2::AvailabilityZone::Name
+    PrivateSubnet1BCidrBlock:
+        Type: String
+    AvailabilityZonePrivate1B:
+        Type: AWS::EC2::AvailabilityZone::Name
+    
+
+
+Resources:
+    apolloVpc:
+        Type: AWS::EC2::VPC
+        Properties:
+            CidrBlock: !Ref VpcCidrBlock
+            InstanceTenancy: default
+            Tags:
+                - Key: Name
+                  Value: !Join ['-',[!Ref VpcName,'vpc']]
+
+    PublicSubnet1A:        
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId: !Ref apolloVpc
+            CidrBlock: !Ref PublicSubnet1ACidrBlock
+            AvailabilityZone: !Ref AvailabilityZonePublic1A
+            MapPublicIpOnLaunch: true
+            Tags:
+                - Key: Name
+                  Value: !Join ['-',[!Ref VpcName ,'public-1a']]
+
+    PublicSubnet1B:        
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId: !Ref apolloVpc
+            CidrBlock: !Ref PublicSubnet1BCidrBlock
+            AvailabilityZone: !Ref AvailabilityZonePublic1B
+            MapPublicIpOnLaunch: true
+            Tags:
+                - Key: Name
+                  Value: !Join ['-',[!Ref VpcName ,'public-1b']]
+
+
+    PrivateSubnet1A:        
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId: !Ref apolloVpc
+            CidrBlock: !Ref PrivateSubnet1ACidrBlock
+            AvailabilityZone: !Ref AvailabilityZonePrivate1A
+            Tags:
+                - Key: Name
+                  Value: !Join ['-',[!Ref VpcName ,'private-1a']]
+
+    PrivateSubnet1B:        
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId: !Ref apolloVpc
+            CidrBlock: !Ref PrivateSubnet1BCidrBlock
+            AvailabilityZone: !Ref AvailabilityZonePrivate1B
+            Tags:
+                - Key: Name
+                  Value: !Join ['-',[!Ref VpcName ,'private-1b']]
+
+    
